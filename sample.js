@@ -24,7 +24,7 @@ createInstance = (to, from, parent) => {
 	
 	run.type = 'button',
 	run.textContent = run.dataset.standby = '⏱ Run',
-	run.dataset.running = '🛑 Suspend',
+	run.dataset.running = '🛑 Pause',
 	run.addEventListener('click', () => to.input.dataset.run ? (clearInterval(to.input.dataset.run), delete to.input.dataset.run, run.textContent = run.dataset.standby, sync.disabled = false) : (sync.disabled = true, to.begin = Date.now(), to.input.dataset.run = setInterval(updateContent, INTERVAL), run.textContent = run.dataset.running)),
 	
 	sync.type = 'button',
