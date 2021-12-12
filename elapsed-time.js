@@ -6,41 +6,40 @@ getStaticDate = (
 	date,
 	dayNames = [ '日', '月', '火', '水', '木', '金', '土' ],
 	meridian = [ '午前', '午後' ]
-) => {
+) => ({
 	
-	const data = {};
+	source: date instanceof Date ? date : (date = new Date(date)),
 	
-	data.source = date instanceof Date ? date : (date = new Date(date)),
+	year: date.getFullYear(),
+	day: date.getDate(),
+	month: date.getMonth(),
+	hours: date.getHours(),
+	mins: date.getMinutes(),
+	secs: date.getSeconds(),
+	msecs: date.getMilliseconds(),
+	time: date.getTime(),
 	
-	data.year = date.getFullYear(),
-	data.month = date.getMonth(),
-	data.hours = date.getHours(),
-	data.mins = date.getMinutes(),
-	data.secs = date.getSeconds(),
-	data.msecs = date.getMilliseconds(),
-	data.time = date.getTime(),
+	dayName: Array.isArray(dayNames) ? dayNames[date.getDay()] : dayNames || null,
+	meridian: Array.isArray(meridian) ? meridian[date.getHours() < 12 ? 0 : 1] : meridian || null
 	
-	data.dayName = Array.isArray(dayNames) ? dayNames[date.getDay()] : dayNames || null,
-	data.meridian =
-		Array.isArray(meridian) ? meridian[date.getHours() < 12 ? 0 : 1] : meridian || null;
-	
-	return data;
-	
-},
+}),
 
 getElapse = (to = 0, from = new Date()) => {
 	
 	if ((to = getStaticDate(to)).time > (from = getStaticDate(from)).time) {
+		
 		const elapsed = getElapse(from.source, to.source);
+		
 		let k;
 		for (k in elapsed) elapsed[k] = k === 'from' ? to : k === 'to' ? from : elapsed[k] === null ? elapsed[k] : -elapsed[k];
+		
 		return elapsed;
+		
 	}
 	
-	const	monthly = [], elapsed = { years: 0, months: -1, monthly, from, to };
+	const monthly = [], elapsed = { years: 0, months: -1, monthly, from, to };
 	let i, daysCount, daysOfMonth, mo, isLeap, y;
 	
-	//daysCount = parseInt((elapsed.time = from.time - to.time) / 86400000),
 	i = -1,
 	daysCount = elapsed.totalDays = ((elapsed.time = from.time - to.time) / 1000 | 0) / 86400 | 0,
 	daysOfMonth = 0, mo = from.month + 1, isLeap = !((y = from.year) % 4 || !(y % 100) && y % 400);
