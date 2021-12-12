@@ -45,10 +45,8 @@ getElapse = (to = 0, from = new Date()) => {
 	daysOfMonth = 0, mo = from.month + 1, isLeap = !((y = from.year) % 4 || !(y % 100) && y % 400);
 	while ((daysCount -= daysOfMonth) >= 0) {
 		
-		monthly[++i] = daysOfMonth =
-			--mo === 1 ? isLeap ? 29 : 28 : mo === 3 || mo === 5 || mo === 8 || mo === 10 ? 30 : 31,
-		
-		mo === 0 && (mo = 12),
+		monthly[++i] = daysOfMonth = (--mo === -1 && (mo = 11)) === 1 ?
+			isLeap ? 29 : 28 : mo === 3 || mo === 5 || mo === 8 || mo === 10 ? 30 : 31,
 		
 		++elapsed.months === 12 &&
 			(++elapsed.years, elapsed.months = 0, isLeap = !(--y % 4 || !(y % 100) && y % 400));
