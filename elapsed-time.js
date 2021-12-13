@@ -3,35 +3,43 @@ const
 isLeapYear = y => !(y % 4 || !(y % 100) && y % 400),
 
 getStaticDate = (
-	date,
+	source,
 	dayNames = [ '日', '月', '火', '水', '木', '金', '土' ],
 	meridian = [ '午前', '午後' ]
-) => ({
+) => {
 	
-	source: date instanceof Date ? date : (date = new Date(date)),
+	const h = (source instanceof Date ? source : (source = new Date(source))).getHours();
 	
-	year: date.getFullYear(),
-	day: date.getDate(),
-	month: date.getMonth(),
-	hours: date.getHours(),
-	mins: date.getMinutes(),
-	secs: date.getSeconds(),
-	msecs: date.getMilliseconds(),
-	time: date.getTime(),
-	
-	dayName: Array.isArray(dayNames) ? dayNames[date.getDay()] : dayNames || null,
-	meridian: Array.isArray(meridian) ? meridian[date.getHours() < 12 ? 0 : 1] : meridian || null
-	
-}),
+	return {
+			
+			source,
+			
+			year: source.getFullYear(),
+			day: source.getDate(),
+			month: source.getMonth(),
+			hours: h,
+			mhours: h < 12 ? h : h - 12,
+			mins: source.getMinutes(),
+			secs: source.getSeconds(),
+			msecs: source.getMilliseconds(),
+			time: source.getTime(),
+			
+			dayName: Array.isArray(dayNames) ? dayNames[source.getDay()] : dayNames,
+			meridian: Array.isArray(meridian) ? meridian[h < 12 ? 0 : 1] : meridian
+			
+		};
+		
+},
 
 getElapse = (to = 0, from = new Date()) => {
 	
 	if ((to = getStaticDate(to)).time > (from = getStaticDate(from)).time) {
 		
 		const elapsed = getElapse(from.source, to.source);
-		
 		let k;
-		for (k in elapsed) elapsed[k] = k === 'from' ? to : k === 'to' ? from : elapsed[k] === null ? elapsed[k] : -elapsed[k];
+		
+		for (k in elapsed) typeof elapsed[k] === 'number' && (elapsed[k] = -elapsed[k]);
+		elapsed.to = from, elapsed.from = to;
 		
 		return elapsed;
 		
@@ -45,8 +53,10 @@ getElapse = (to = 0, from = new Date()) => {
 	daysOfMonth = 0, mo = from.month + 1, isLeap = !((y = from.year) % 4 || !(y % 100) && y % 400);
 	while ((daysCount -= daysOfMonth) >= 0) {
 		
-		monthly[++i] = daysOfMonth = (--mo === -1 && (mo = 11)) === 1 ?
-			isLeap ? 29 : 28 : mo === 3 || mo === 5 || mo === 8 || mo === 10 ? 30 : 31,
+		monthly[++i] = daysOfMonth =
+			--mo === 1 ? isLeap ? 29 : 28 : mo === 3 || mo === 5 || mo === 8 || mo === 10 ? 30 : 31,
+		
+		mo ||= 12,
 		
 		++elapsed.months === 12 &&
 			(++elapsed.years, elapsed.months = 0, isLeap = !(--y % 4 || !(y % 100) && y % 400));

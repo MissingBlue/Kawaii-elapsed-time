@@ -13,26 +13,34 @@ INTERVAL = 33,
 createInstance = (to, from, parent) => {
 	
 	const	node = document.createElement('div'),
+			remove = document.createElement('button'),
 			elapse = document.createElement('span'),
 			run = document.createElement('button'),
 			sync = document.createElement('button'),
-			updateContent = () => (text = update(to, from).replace(/^\s*$/, 'now'), elapse.textContent = ` is 🗓 ${text === 'now' ? text : text + ' ago'} from `);
+			updateContent = () => (text = update(to, from).replace(/^\s*$/, 'now'), elapse.textContent = ` is 🗓 ${text === 'now' ? text : text + ' ago'} from `),
+			ac = new AbortController(),
+			eventInit = { signal: ac.signal };
 	let text;
 	
-	(to = createInput(to, node)).input.addEventListener('updated', updateContent),
-	(from = createInput(from, node)).input.addEventListener('updated', updateContent),
+	(to = createInput(to, node, ac)).input.addEventListener('updated', updateContent),
+	(from = createInput(from, node, ac)).input.addEventListener('updated', updateContent),
+	
+	remove.type = 'button',
+	remove.textContent = '🗑',
+	remove.title = 'Remove this instance.',
+	remove.addEventListener('click', () => (ac.abort(), node.remove()), eventInit),
 	
 	run.type = 'button',
 	run.textContent = run.dataset.standby = '⏱ Run',
 	run.dataset.running = '🛑 Pause',
-	run.addEventListener('click', () => to.input.dataset.run ? (clearInterval(to.input.dataset.run), delete to.input.dataset.run, run.textContent = run.dataset.standby, sync.disabled = false) : (sync.disabled = true, to.begin = Date.now(), to.input.dataset.run = setInterval(updateContent, INTERVAL), run.textContent = run.dataset.running)),
+	run.addEventListener('click', () => to.input.dataset.run ? (clearInterval(to.input.dataset.run), delete to.input.dataset.run, run.textContent = run.dataset.standby, sync.disabled = false) : (sync.disabled = true, to.begin = Date.now(), to.input.dataset.run = setInterval(updateContent, INTERVAL), run.textContent = run.dataset.running), eventInit),
 	
 	sync.type = 'button',
 	sync.textContent = sync.dataset.standby = '🔄 Sync',
 	sync.dataset.running = '🛑 Suspend',
-	sync.addEventListener('click', () => to.input.dataset.sync ? (clearInterval(to.input.dataset.sync), delete to.input.dataset.sync, sync.textContent = sync.dataset.standby, run.disabled = false) : (run.disabled = true, to.input.dataset.sync = setInterval(updateContent, INTERVAL), sync.textContent = sync.dataset.running)),
+	sync.addEventListener('click', () => to.input.dataset.sync ? (clearInterval(to.input.dataset.sync), delete to.input.dataset.sync, sync.textContent = sync.dataset.standby, run.disabled = false) : (run.disabled = true, to.input.dataset.sync = setInterval(updateContent, INTERVAL), sync.textContent = sync.dataset.running), eventInit),
 	
-	node.append(to.node, elapse, from.node, run,sync),
+	node.append(remove, ' ', to.node, elapse, from.node, ' ', run, ' ', sync),
 	ctrlNode.after(node),
 	
 	updateContent();
@@ -60,7 +68,7 @@ update = (to, from, elapse) => {
 				(msecs === null ? '' : (''+msecs).padStart(3, '0') + ' ms');
 	
 },
-createInput = (date = new Date(), parent) => {
+createInput = (date = new Date(), parent, eventInit) => {
 	
 	const result = {
 							node: document.createElement('span'),
@@ -74,19 +82,20 @@ createInput = (date = new Date(), parent) => {
 	result.input.addEventListener('change', event => (
 			result.date = new Date(event.target.value),
 			result.input.dispatchEvent(new CustomEvent('updated'))
-		)),
+		), eventInit),
 	
 	result.now.type = 'button',
-	result.now.textContent = '👈 Now',
+	result.now.textContent = 'Now 👉',
 	result.now.addEventListener(
 			'click',
 			event => (
 					result.input.value = getValue(result.date = new Date()),
 					result.input.dispatchEvent(new CustomEvent('updated'))
-				)
+				),
+			eventInit
 		),
 	
-	result.node.append(result.input, result.now),
+	result.node.append(result.now, ' ', result.input),
 	parent instanceof HTMLElement && parent.append(result.node);
 	
 	return result;
